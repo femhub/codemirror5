@@ -14,26 +14,33 @@ CodeMirror.defineMode("karel", function(conf) {
 
     var wordOperators = wordRegexp(['not', 'and', 'or']);
     var commonkeywords = ['go', 'left', 'right', 'put', 'get', 'repeat',
-                          'while', 'if', 'else', 'def'];
+    'while', 'if', 'else', 'def'];
     var commontypes = ['home', 'north', 'wall', 'gem', 'empty'];
-    var ka2 = {'types': ['basestring', 'buffer', 'file', 'long', 'unicode',
-                         'xrange'],
-               'keywords': ['exec', 'print']};
-    var ka3 = {'types': ['bytearray', 'bytes', 'filter', 'map', 'memoryview',
-                         'open', 'range', 'zip'],
-               'keywords': ['nonlocal']};
+    var commonBlockKeywords = ['repeat', 'while', 'if', 'else', 'def'];
+    var ka2 = {
+        'types': ['basestring', 'buffer', 'file', 'long', 'unicode',
+        'xrange'],
+        'keywords': ['exec', 'print']
+        };
+    var ka3 = {
+        'types': ['bytearray', 'bytes', 'filter', 'map', 'memoryview',
+        'open', 'range', 'zip'],
+        'keywords': ['nonlocal']
+        };
+    var stringPrefixes;
 
     if (!!conf.mode.version && parseInt(conf.mode.version, 10) === 3) {
         commonkeywords = commonkeywords.concat(ka3.keywords);
         commontypes = commontypes.concat(ka3.types);
-        var stringPrefixes = new RegExp("^(([rb]|(br))?('{3}|\"{3}|['\"]))", "i");
+        stringPrefixes = new RegExp("^(([rb]|(br))?('{3}|\"{3}|['\"]))", "i");
     } else {
         commonkeywords = commonkeywords.concat(ka2.keywords);
         commontypes = commontypes.concat(ka2.types);
-        var stringPrefixes = new RegExp("^(([rub]|(ur)|(br))?('{3}|\"{3}|['\"]))", "i");
+        stringPrefixes = new RegExp("^(([rub]|(ur)|(br))?('{3}|\"{3}|['\"]))", "i");
     }
     var keywords = wordRegexp(commonkeywords);
     var types = wordRegexp(commontypes);
+    var blockKeywords = new RegExp("^(" + commonBlockKeywords.join("|") + ")$");
 
     // tokenizers
     function tokenBase(stream, state) {
@@ -70,9 +77,15 @@ CodeMirror.defineMode("karel", function(conf) {
         if (stream.match(/^[0-9\.]/, false)) {
             var floatLiteral = false;
             // Floats
-            if (stream.match(/^\d*\.\d+(e[\+\-]?\d+)?/i)) { floatLiteral = true; }
-            if (stream.match(/^\d+\.\d*/)) { floatLiteral = true; }
-            if (stream.match(/^\.\d+/)) { floatLiteral = true; }
+            if (stream.match(/^\d*\.\d+(e[\+\-]?\d+)?/i)) {
+                floatLiteral = true;
+            }
+            if (stream.match(/^\d+\.\d*/)) {
+                floatLiteral = true;
+            }
+            if (stream.match(/^\.\d+/)) {
+                floatLiteral = true;
+            }
             if (floatLiteral) {
                 // Float literals may be "imaginary"
                 stream.eat(/J/i);
@@ -81,11 +94,17 @@ CodeMirror.defineMode("karel", function(conf) {
             // Integers
             var intLiteral = false;
             // Hex
-            if (stream.match(/^0x[0-9a-f]+/i)) { intLiteral = true; }
+            if (stream.match(/^0x[0-9a-f]+/i)) {
+                intLiteral = true;
+            }
             // Binary
-            if (stream.match(/^0b[01]+/i)) { intLiteral = true; }
+            if (stream.match(/^0b[01]+/i)) {
+                intLiteral = true;
+            }
             // Octal
-            if (stream.match(/^0o[0-7]+/i)) { intLiteral = true; }
+            if (stream.match(/^0o[0-7]+/i)) {
+                intLiteral = true;
+            }
             // Decimal
             if (stream.match(/^[1-9]\d*(e[\+\-]?\d+)?/)) {
                 // Decimal literals may be "imaginary"
@@ -94,7 +113,9 @@ CodeMirror.defineMode("karel", function(conf) {
                 intLiteral = true;
             }
             // Zero by itself with no other piece of number.
-            if (stream.match(/^0(?![\dx])/i)) { intLiteral = true; }
+            if (stream.match(/^0(?![\dx])/i)) {
+                intLiteral = true;
+            }
             if (intLiteral) {
                 // Integer literals may be "long"
                 stream.eat(/L/i);
@@ -218,7 +239,7 @@ CodeMirror.defineMode("karel", function(conf) {
     function tokenLexer(stream, state) {
         var style = state.tokenize(stream, state);
         var current = stream.current();
-
+        
         // Handle '.' connected identifiers
         if (current === '.') {
             style = state.tokenize(stream, state);
@@ -246,8 +267,9 @@ CodeMirror.defineMode("karel", function(conf) {
         // Handle scope changes.
         if (current === 'pass' || current === 'return') {
             state.dedent += 1;
-        }
-        if ((current === ':' && !state.lambda && state.scopes[0].type == 'py')
+        }        
+        if ((stream.string.slice(stream.indentation(), stream.pos).match(blockKeywords) 
+            && !state.lambda && state.scopes[0].type == 'py')
             || style === 'ka-indent') {
             indent(stream, state);
         }
@@ -277,18 +299,24 @@ CodeMirror.defineMode("karel", function(conf) {
     var external = {
         startState: function(basecolumn) {
             return {
-              tokenize: tokenBase,
-              scopes: [{offset:basecolumn || 0, type:'py'}],
-              lastToken: null,
-              lambda: false,
-              dedent: 0
-          };
+                tokenize: tokenBase,
+                scopes: [{
+                    offset:basecolumn || 0, 
+                    type:'py'
+                }],
+                lastToken: null,
+                lambda: false,
+                dedent: 0
+            };
         },
         
         token: function(stream, state) {
             var style = tokenLexer(stream, state);
             
-            state.lastToken = {style:style, content: stream.current()};
+            state.lastToken = {
+                style:style, 
+                content: stream.current()
+                };
             
             if (stream.eol() && stream.lambda) {
                 state.lambda = false;
