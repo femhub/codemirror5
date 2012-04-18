@@ -13,7 +13,7 @@ CodeMirror.defineMode("karel", function(conf) {
     var identifiers = new RegExp("^[_A-Za-z][_A-Za-z0-9]*");
 
     var wordOperators = wordRegexp(['not', 'and', 'or']);
-    var commonkeywords = ['go', 'turn', 'put', 'get', 'repeat',
+    var commonkeywords = ['go', 'left', 'right', 'put', 'get', 'repeat',
                           'while', 'if', 'else', 'def'];
     var commontypes = ['home', 'north', 'wall', 'gem', 'empty'];
     var ka2 = {'types': ['basestring', 'buffer', 'file', 'long', 'unicode',
