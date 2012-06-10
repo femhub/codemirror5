@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <head>
+    <title>CodeMirror: Octave mode</title>
+    <link rel="stylesheet" href="../../lib/codemirror.css">
+    <script src="../../lib/codemirror.js"></script>
+    <script src="octave.js"></script>
+    <link rel="stylesheet" href="../../doc/docs.css">
+    <style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+  </head>
+  <body>
+    <h1>CodeMirror: Octave mode</h1>
+    
+    <div><textarea id="code" name="code">
+%numbers
+1234
+1234i
+1234j
+.234
+.234j
+2.23i
+23e2
+12E1j
+123D-4
+0x234
+
+%strings
+'asda''a'
+"asda""a"
+
+%identifiers
+a
+as123
+__asd__
+
+%operators
+-
++
+=
+==
+>
+<
+>=
+<=
+&
+~
+...
+break zeros default margin round ones rand
+ceil floor size clear zeros eye mean std cov
+error eval function
+abs acos atan asin cos cosh exp log prod sum
+log10 max min sign sin sinh sqrt tan reshape
+return
+case switch
+else elseif end if otherwise
+do for while
+try catch
+classdef properties events methods
+global persistent
+
+%one line comment
+...one line comment
+%{ multi 
+line commment %}
+1
+
+    </textarea></div>
+    <script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        mode: {name: "octave",
+               version: 2,
+               singleLineStringErrors: false},
+        lineNumbers: true,
+        indentUnit: 4,
+        tabMode: "shift",
+        matchBrackets: true
+      });
+    </script>
+    <h2>Configuration Options:</h2>
+    <ul>
+      <li>version - 2/3 - The version of Python to recognize.  Default is 2.</li>
+      <li>singleLineStringErrors - true/false - If you have a single-line string that is not terminated at the end of the line, this will show subsequent lines as errors if true, otherwise it will consider the newline as the end of the string. Default is false.</li>
+    </ul>
+
+    <p><strong>MIME types defined:</strong> <code>text/x-python</code>.</p>
+  </body>
+</html>
