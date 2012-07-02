@@ -16,7 +16,7 @@ CodeMirror.defineMode("octave", function(conf, parserConf) {
                 'sqrt', 'tan', 'reshape', 'break', 'zeros', 'default', 'margin', 'round', 'ones', 
                 'rand', 'syn', 'ceil', 'floor', 'size', 'clear', 'zeros', 'eye', 'mean', 'std', 'cov']);
 
-    var keywords = wordRegexp(['return', 'case', 'switch', 'else', 'elseif', 'end', 'if', 'otherwise', 
+    var keywords = wordRegexp(['return', 'case', 'switch', 'else', 'elseif', 'end', 'endif', 'endfunction', 'if', 'otherwise',
                 'do', 'for', 'while', 'try', 'catch', 'classdef', 'properties', 'events', 'methods', 
                 'global', 'persistent']);
 
