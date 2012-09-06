@@ -11,14 +11,20 @@ CodeMirror.defineMode("octave", function(conf, parserConf) {
     var expressionEnd = new RegExp("^[\\]\\)]");
     var identifiers = new RegExp("^[_A-Za-z][_A-Za-z0-9]*");
 
-    var builtins = wordRegexp(['error', 'eval', 'function', 'abs', 'acos', 'atan', 'asin', 'cos', 
-                'cosh', 'exp', 'log', 'prod', 'sum', 'log10', 'max', 'min', 'sign', 'sin', 'sinh', 
+    var builtins = wordRegexp([
+                'error', 'eval', 'function', 'abs', 'acos', 'atan', 'asin', 'cos', 
+                'cosh', 'exp', 'log', 'prod', 'log10', 'max', 'min', 'sign', 'sin', 'sinh', 
                 'sqrt', 'tan', 'reshape', 'break', 'zeros', 'default', 'margin', 'round', 'ones', 
-                'rand', 'syn', 'ceil', 'floor', 'size', 'clear', 'zeros', 'eye', 'mean', 'std', 'cov']);
+                'rand', 'syn', 'ceil', 'floor', 'size', 'clear', 'zeros', 'eye', 'mean', 'std', 'cov',
+                'det', 'eig', 'inv', 'norm', 'rank', 'trace', 'expm', 'logm', 'sqrtm', 'linspace', 'plot', 
+                'title', 'xlabel', 'ylabel', 'legend', 'text', 'meshgrid', 'mesh', 'num2str'
+                ]);
 
-    var keywords = wordRegexp(['return', 'case', 'switch', 'else', 'elseif', 'end', 'endif', 'endfunction', 'if', 'otherwise',
-                'do', 'for', 'while', 'try', 'catch', 'classdef', 'properties', 'events', 'methods', 
-                'global', 'persistent']);
+    var keywords = wordRegexp([
+                'return', 'case', 'switch', 'else', 'elseif', 'end', 'endif', 'endfunction', 
+                'if', 'otherwise', 'do', 'for', 'while', 'try', 'catch', 'classdef', 'properties', 'events', 
+                'methods', 'global', 'persistent', 'endfor', 'endwhile', 'printf', 'disp', 'until', 'continue'
+                ]);
 
 
     // tokenizers
