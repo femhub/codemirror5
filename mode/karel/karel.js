@@ -15,7 +15,7 @@ CodeMirror.defineMode("karel", function(conf) {
     var wordOperators = wordRegexp(['not', 'and', 'or']);
     var commonkeywords = ['go', 'left', 'right', 'put', 'get', 'repeat',
     'while', 'if', 'else', 'def'];
-    var commontypes = ['home', 'north', 'wall', 'gem', 'empty'];
+    var commontypes = ['home', 'north', 'wall', 'gem', 'tray', 'empty'];
     var commonBlockKeywords = ['repeat', 'while', 'if', 'else', 'def'];
     var ka2 = {
         'types': ['basestring', 'buffer', 'file', 'long', 'unicode',
