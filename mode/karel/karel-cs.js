@@ -1,10 +1,10 @@
-CodeMirror.defineMode("karel", function(conf) {
+CodeMirror.defineMode("karel-cs", function(conf) {
     var ERRORCLASS = 'ka-error';
     
     function wordRegexp(words) {
         return new RegExp("^((" + words.join(")|(") + "))\\b");
     }
-    
+
     var singleOperators = new RegExp("^[\\+\\-\\*/%&|\\^~<>!]");
     var singleDelimiters = new RegExp('^[\\(\\)\\[\\]\\{\\}@,:`=;\\.]');
     var doubleOperators = new RegExp("^((==)|(!=)|(<=)|(>=)|(<>)|(<<)|(>>)|(//)|(\\*\\*))");
@@ -12,15 +12,15 @@ CodeMirror.defineMode("karel", function(conf) {
     var tripleDelimiters = new RegExp("^((//=)|(>>=)|(<<=)|(\\*\\*=))");
     var identifiers = new RegExp("^[_A-Za-z][_A-Za-z0-9]*");
 
-    var wordOperators = wordRegexp(['not', 'and', 'or']);
-    var commonkeywords = ['go', 'left', 'right', 'put', 'get', 'repeat',
-    'while', 'if', 'else', 'def'];
-    var commontypes = ['home', 'north', 'wall', 'gem', 'tray', 'empty'];
-    var commonBlockKeywords = ['repeat', 'while', 'if', 'else', 'def'];
+    var wordOperators = wordRegexp(['opak', 'a', 'nebo']);
+    var commonkeywords = ['krok', 'doleva', 'doprava', 'poloz', 'zvedni', 'opakuj',
+    'dokud', 'kdyz', 'tak', 'def'];
+    var commontypes = ['doma', 'sever', 'zed', 'diamant', 'podnos', 'prazdny'];
+    var commonBlockKeywords = ['opakuj', 'dokud', 'kdyz', 'tak', 'def'];
     var ka2 = {
         'types': ['basestring', 'buffer', 'file', 'long', 'unicode',
         'xrange'],
-        'keywords': ['exec', 'print']
+        'keywords': ['exec', 'tisk']
         };
     var ka3 = {
         'types': ['bytearray', 'bytes', 'filter', 'map', 'memoryview',
@@ -337,4 +337,4 @@ CodeMirror.defineMode("karel", function(conf) {
     return external;
 });
 
-CodeMirror.defineMIME("text/x-karel", "karel");
+CodeMirror.defineMIME("text/x-karel", "karel-cs");
