@@ -1,5 +1,5 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
-// Distributed under an MIT license: http://codemirror.net/LICENSE
+// Distributed under an MIT license: https://codemirror.net/5/LICENSE
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
@@ -14,26 +14,27 @@
 CodeMirror.defineMode('shell', function() {
 
   var words = {};
-  function define(style, string) {
-    var split = string.split(' ');
-    for(var i = 0; i < split.length; i++) {
-      words[split[i]] = style;
+  function define(style, dict) {
+    for(var i = 0; i < dict.length; i++) {
+      words[dict[i]] = style;
     }
   };
 
-  // Atoms
-  define('sh-atom', 'true false');
+  var commonAtoms = ["true", "false"];
+  var commonKeywords = ["if", "then", "do", "else", "elif", "while", "until", "for", "in", "esac", "fi",
+    "fin", "fil", "done", "exit", "set", "unset", "export", "function"];
+  var commonCommands = ["ab", "awk", "bash", "beep", "cat", "cc", "cd", "chown", "chmod", "chroot", "clear",
+    "cp", "curl", "cut", "diff", "echo", "find", "gawk", "gcc", "get", "git", "grep", "hg", "kill", "killall",
+    "ln", "ls", "make", "mkdir", "openssl", "mv", "nc", "nl", "node", "npm", "ping", "ps", "restart", "rm",
+    "rmdir", "sed", "service", "sh", "shopt", "shred", "source", "sort", "sleep", "ssh", "start", "stop",
+    "su", "sudo", "svn", "tee", "telnet", "top", "touch", "vi", "vim", "wall", "wc", "wget", "who", "write",
+    "yes", "zsh"];
 
-  // Keywords
-  define('sh-keyword', 'if then do else elif while until for in esac fi fin ' +
-    'fil done exit set unset export function');
+  CodeMirror.registerHelper("hintWords", "shell", commonAtoms.concat(commonKeywords, commonCommands));
 
-  // Commands
-  define('sh-builtin', 'ab awk bash beep cat cc cd chown chmod chroot clear cp ' +
-    'curl cut diff echo find gawk gcc get git grep kill killall ln ls make ' +
-    'mkdir openssl mv nc node npm ping ps restart rm rmdir sed service sh ' +
-    'shopt shred source sort sleep ssh start stop su sudo tee telnet top ' +
-    'touch vi vim wall wc wget who write yes zsh');
+  define('atom', commonAtoms);
+  define('keyword', commonKeywords);
+  define('builtin', commonCommands);
 
   function tokenBase(stream, state) {
     if (stream.eatSpace()) return null;
@@ -46,86 +47,103 @@ CodeMirror.defineMode('shell', function() {
       return null;
     }
     if (ch === '\'' || ch === '"' || ch === '`') {
-      state.tokens.unshift(tokenString(ch));
+      state.tokens.unshift(tokenString(ch, ch === "`" ? "quote" : "string"));
       return tokenize(stream, state);
     }
     if (ch === '#') {
       if (sol && stream.eat('!')) {
         stream.skipToEnd();
-        return 'sh-meta'; // 'comment'?
+        return 'meta'; // 'comment'?
       }
       stream.skipToEnd();
-      return 'sh-comment';
+      return 'comment';
     }
     if (ch === '$') {
       state.tokens.unshift(tokenDollar);
       return tokenize(stream, state);
     }
     if (ch === '+' || ch === '=') {
-      return 'sh-operator';
+      return 'operator';
     }
     if (ch === '-') {
       stream.eat('-');
       stream.eatWhile(/\w/);
-      return 'sh-attribute';
+      return 'attribute';
+    }
+    if (ch == "<") {
+      if (stream.match("<<")) return "operator"
+      var heredoc = stream.match(/^<-?\s*['"]?([^'"]*)['"]?/)
+      if (heredoc) {
+        state.tokens.unshift(tokenHeredoc(heredoc[1]))
+        return 'string-2'
+      }
     }
     if (/\d/.test(ch)) {
       stream.eatWhile(/\d/);
       if(stream.eol() || !/\w/.test(stream.peek())) {
-        return 'sh-number';
+        return 'number';
       }
     }
-    // match username@hostname:
-    if (stream.match(/^[^\n\r\s]+?@[^\n\r\s]+?:~/i, false)) {
-        if (stream.match(/^[^\n\r\s]+?@[^\n\r\s:]+/i)) {
-            return 'sh-prompt';
-        }
-    }
-    
     stream.eatWhile(/[\w-]/);
     var cur = stream.current();
-    if (stream.peek() === '=' && /\w+/.test(cur)) return 'sh-def';
+    if (stream.peek() === '=' && /\w+/.test(cur)) return 'def';
     return words.hasOwnProperty(cur) ? words[cur] : null;
   }
 
-  function tokenString(quote) {
+  function tokenString(quote, style) {
+    var close = quote == "(" ? ")" : quote == "{" ? "}" : quote
     return function(stream, state) {
-      var next, end = false, escaped = false;
+      var next, escaped = false;
       while ((next = stream.next()) != null) {
-        if (next === quote && !escaped) {
-          end = true;
+        if (next === close && !escaped) {
+          state.tokens.shift();
           break;
-        }
-        if (next === '$' && !escaped && quote !== '\'') {
+        } else if (next === '$' && !escaped && quote !== "'" && stream.peek() != close) {
           escaped = true;
           stream.backUp(1);
           state.tokens.unshift(tokenDollar);
           break;
+        } else if (!escaped && quote !== close && next === quote) {
+          state.tokens.unshift(tokenString(quote, style))
+          return tokenize(stream, state)
+        } else if (!escaped && /['"]/.test(next) && !/['"]/.test(quote)) {
+          state.tokens.unshift(tokenStringStart(next, "string"));
+          stream.backUp(1);
+          break;
         }
         escaped = !escaped && next === '\\';
       }
-      if (end || !escaped) {
-        state.tokens.shift();
-      }
-      return (quote === '`' || quote === ')' ? 'sh-quote' : 'sh-string');
+      return style;
     };
   };
 
+  function tokenStringStart(quote, style) {
+    return function(stream, state) {
+      state.tokens[0] = tokenString(quote, style)
+      stream.next()
+      return tokenize(stream, state)
+    }
+  }
+
   var tokenDollar = function(stream, state) {
     if (state.tokens.length > 1) stream.eat('$');
-    var ch = stream.next(), hungry = /\w/;
-    if (ch === '{') hungry = /[^}]/;
-    if (ch === '(') {
-      state.tokens[0] = tokenString(')');
+    var ch = stream.next()
+    if (/['"({]/.test(ch)) {
+      state.tokens[0] = tokenString(ch, ch == "(" ? "quote" : ch == "{" ? "def" : "string");
       return tokenize(stream, state);
     }
-    if (!/\d/.test(ch)) {
-      stream.eatWhile(hungry);
-      stream.eat('}');
-    }
+    if (!/\d/.test(ch)) stream.eatWhile(/\w/);
     state.tokens.shift();
-    return 'sh-def';
+    return 'def';
   };
+
+  function tokenHeredoc(delim) {
+    return function(stream, state) {
+      if (stream.sol() && stream.string == delim) state.tokens.shift()
+      stream.skipToEnd()
+      return "string-2"
+    }
+  }
 
   function tokenize(stream, state) {
     return (state.tokens[0] || tokenBase) (stream, state);
@@ -135,10 +153,16 @@ CodeMirror.defineMode('shell', function() {
     startState: function() {return {tokens:[]};},
     token: function(stream, state) {
       return tokenize(stream, state);
-    }
+    },
+    closeBrackets: "()[]{}''\"\"``",
+    lineComment: '#',
+    fold: "brace"
   };
 });
 
 CodeMirror.defineMIME('text/x-sh', 'shell');
+// Apache uses a slightly different Media Type for Shell scripts
+// http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types
+CodeMirror.defineMIME('application/x-sh', 'shell');
 
 });

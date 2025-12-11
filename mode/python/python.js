@@ -329,14 +329,14 @@
       lineComment: "#",
       fold: "indent"
     };
-    
+
     if (parserConf.overlay != null) {
         // overlay a mode over this mode
         return CodeMirror.overlayMode(external, CodeMirror.getMode(conf, parserConf.overlay));
     } else {
         return external;
     }
-    
+
   });
 
   CodeMirror.defineMIME("text/x-python", "python");

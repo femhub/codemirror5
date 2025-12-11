@@ -1,6 +1,11 @@
 /node_modules
 /npm-debug.log
-test.html
+/package-lock.json
+/keymap/vim.js
+/test*.html
 .tern-*
 *~
 *.swp
+.idea
+*.iml
+**/.DS_Store

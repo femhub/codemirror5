@@ -1,5 +1,5 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
-// Distributed under an MIT license: http://codemirror.net/LICENSE
+// Distributed under an MIT license: https://codemirror.net/5/LICENSE
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
@@ -53,7 +53,7 @@ CodeMirror.defineMode('smalltalk', function(config) {
         stream.next();
         token = nextSymbol(stream, new Context(nextSymbol, context));
       } else {
-        if (stream.eatWhile(/[^ .{}\[\]()]/))
+        if (stream.eatWhile(/[^\s.{}\[\]()]/))
           token.name = 'string-2';
         else
           token.name = 'meta';
@@ -61,7 +61,7 @@ CodeMirror.defineMode('smalltalk', function(config) {
 
     } else if (aChar === '$') {
       if (stream.next() === '<') {
-        stream.eatWhile(/[^ >]/);
+        stream.eatWhile(/[^\s>]/);
         stream.next();
       }
       token.name = 'string-2';
